@@ -1,7 +1,9 @@
 """Expose the Isaac hotel as RMF robots and building equipment over ROS 2."""
 
 import asyncio
+from contextlib import suppress
 import json
+import os
 import socket
 import time
 from uuid import uuid4
@@ -22,6 +24,9 @@ from rmf_task_msgs.msg import ApiRequest, ApiResponse
 from rosgraph_msgs.msg import Clock
 
 from . import ASSETS, PHYSICS_HZ, ROOT, SIM_ADDRESS
+from .lifecycle import RUN_ID, STATE_DIR, request_reset
+from .task_history import TaskHistory
+from .task_simulation import TaskSimulation
 
 PRESETS = {
     "lobby-patrol": ("Lobby patrol", "Lobby → Restaurant", ["lobby", "restaurant"]),
@@ -97,9 +102,12 @@ class HotelBridge(Node):
         self.last_seen = 0.0
         self.sequence = 0
         self.sim_restarted = False
+        self.reset_run = None
         self.fleet_seen = {}
         self.active_tasks = {}
         self.tasks = {}
+        self.history = TaskHistory(STATE_DIR / "tasks.sqlite3")
+        self.task_simulation = TaskSimulation(self)
         self.responses = {}
         self.manual_lifts = {}
         self.stamp = Time()
@@ -175,7 +183,35 @@ class HotelBridge(Node):
                 task["dropoff_acknowledged"] = True
 
     def sim_live(self):
-        return not self.sim_restarted and self.last_sim is not None and time.monotonic() - self.last_seen < 2
+        return (not self.reset_run and not self.sim_restarted and self.last_sim is not None
+                and time.monotonic() - self.last_seen < 2)
+
+    def sim_time(self):
+        return self.last_sim["step"] / PHYSICS_HZ if self.last_sim else 0
+
+    def ready(self):
+        now = time.monotonic()
+        return self.sim_live() and all(now - self.fleet_seen.get(name, -float("inf")) < 10 for name in self.robots)
+
+    def available_fleets(self):
+        active = [task for task in self.tasks.values() if task.get("preset") and task["status"] not in TERMINAL]
+        if any(not task.get("robot") for task in active):
+            return set()
+        assigned = {task["robot"] for task in active}
+        return {self.robots[robot["name"]]["fleet"] for robot in self.last_sim["robots"]
+                if robot["mode"] in ("idle", "charging") and robot["name"] not in assigned}
+
+    def reset(self):
+        if RUN_ID is None:
+            raise web.HTTPConflict(text="Reset is available when running the hotel with Docker Compose.")
+        if not self.reset_run:
+            try:
+                self.reset_run = request_reset()
+            except OSError as error:
+                self.get_logger().error(f"Could not record the reset request: {error}")
+                raise web.HTTPInternalServerError(text="Could not reset the simulation.") from error
+            self.task_simulation.set_enabled(False)
+        return {"run": self.reset_run}
 
     def lift_call(self, name, level, session, release=False):
         self.manual_lift_pub.publish(LiftRequest(
@@ -225,12 +261,14 @@ class HotelBridge(Node):
                     self.manual_lifts.pop(name)
 
     def exchange(self):
-        if self.sim_restarted:
+        if self.sim_restarted or self.reset_run:
             return
         state = None
         try:
             while True:
-                state = json.loads(self.link.recv(65535))
+                update = json.loads(self.link.recv(65535))
+                if update.get("run") == RUN_ID:
+                    state = update
         except (BlockingIOError, ConnectionRefusedError):
             pass
         if state and self.last_sim and state["session"] != self.last_sim["session"]:
@@ -239,7 +277,7 @@ class HotelBridge(Node):
             return
         session = (state or self.last_sim or {}).get("session")
         try:
-            commands = {"session": session, **self.commands}
+            commands = {"session": session, "run": RUN_ID, **self.commands}
             self.link.send(json.dumps(commands, separators=(",", ":")).encode())
         except (BlockingIOError, ConnectionRefusedError):
             pass
@@ -279,7 +317,7 @@ class HotelBridge(Node):
     def snapshot(self):
         now = time.monotonic()
         live = self.sim_live()
-        state = self.last_sim or {}
+        state = {} if self.reset_run else self.last_sim or {}
         poses = {robot["name"]: robot for robot in state.get("robots", [])}
         robots = []
         for name, spec in self.robots.items():
@@ -290,28 +328,52 @@ class HotelBridge(Node):
             robots.append(robot)
         return {"live": live, "ready": live and all(robot["online"] for robot in robots),
                 "restarted": self.sim_restarted, "sim_time": state.get("step", 0) / PHYSICS_HZ,
-                "actors": state.get("actors", {}),
+                "run": RUN_ID, "can_reset": RUN_ID is not None, "resetting": self.reset_run is not None,
+                "task_simulation": self.task_simulation.snapshot(), "performance": self.history.summary(),
+                "actors": state.get("actors", {}), "people": state.get("people", []) if live else [],
                 "robots": robots, "lifts": state.get("lifts", []), "doors": state.get("doors", {}),
-                "tasks": list(reversed(list(self.tasks.values())))}
+                "tasks": [] if self.reset_run else list(reversed(list(self.tasks.values())))}
 
-    def update_task(self, state, preset=None, room=None):
-        task_id = state.get("booking", {}).get("id")
-        if not task_id:
+    def set_task_status(self, task, status):
+        if task.get("status") not in TERMINAL or status in TERMINAL:
+            task["status"] = status
+        if task["status"] in TERMINAL:
+            task.setdefault("ended_at", self.sim_time())
+            self.history.record(task)
+
+    def update_task(self, state, preset=None, room=None, source=None, requested_at=None):
+        booking = state.get("booking", {})
+        task_id = booking.get("id")
+        if not task_id or self.reset_run:
             return None
-        sim_time = self.last_sim["step"] / PHYSICS_HZ if self.last_sim else 0
-        item = self.tasks.setdefault(task_id, {"id": task_id, "time": sim_time})
-        assignment = state.get("assigned_to") or {}
-        status = state.get("status", "queued")
-        if item.get("status") in TERMINAL and status not in TERMINAL:
-            status = item["status"]
-        item.update(status=status,
-                    robot=assignment.get("name", item.get("robot")),
-                    name=PRESETS[preset][0] if preset else item.get("name", state.get("category", "Task")),
-                    route=PRESETS[preset][1] if preset else item.get("route", state.get("detail", "")))
-        if room:
+        now = self.sim_time()
+        item = self.tasks.setdefault(task_id, {"id": task_id, "time": now})
+        request_millis = booking.get("unix_millis_request_time", requested_at)
+        if isinstance(request_millis, int) and 0 <= request_millis <= now * 1000 + 1:
+            item["time"] = request_millis / 1000
+        labels = dict(label.split("=", 1) for label in booking.get("labels", [])
+                      if isinstance(label, str) and "=" in label)
+        preset = preset or labels.get("hotel_task") or item.get("preset")
+        if preset in PRESETS:
+            item.update(preset=preset, name=PRESETS[preset][0], route=PRESETS[preset][1])
+            item["source"] = source or labels.get("hotel_source") or item.get("source", "manual")
+        else:
+            item.setdefault("name", state.get("category", "Task"))
+            if isinstance(state.get("detail"), str):
+                item.setdefault("route", state["detail"])
+        room = room or labels.get("hotel_room") or item.get("room")
+        if room in self.rooms and preset == "food-delivery":
             item.update(room=room, route=f"Lobby → Room {room}")
+
+        assignment = state.get("assigned_to") or {}
+        dispatched = (state.get("dispatch") or {}).get("assignment") or {}
+        item["robot"] = assignment.get("name") or dispatched.get("expected_robot_name") or item.get("robot")
+        self.set_task_status(item, state.get("status", "queued"))
         if len(self.tasks) > 100:
-            self.tasks.pop(next(iter(self.tasks)))
+            expired = next((key for key, task in self.tasks.items()
+                            if key != task_id and task["status"] in TERMINAL), None)
+            if expired:
+                self.tasks.pop(expired)
         return item
 
     def update_fleet(self, fleet):
@@ -324,17 +386,21 @@ class HotelBridge(Node):
             # Jazzy can omit a terminal task update if the last phase has
             # already disappeared. The fleet still reports that it ended.
             if previous and previous["id"] != current and previous["status"] not in TERMINAL:
-                previous["status"] = "completed" if previous.get("dropoff_acknowledged") else "finished"
+                self.set_task_status(previous, "completed" if previous.get("dropoff_acknowledged") else "finished")
             self.active_tasks[name] = current
 
-    async def submit(self, preset, room=None):
-        if not self.snapshot()["ready"]:
+    async def submit(self, preset, room=None, source="manual"):
+        if not self.ready():
             raise web.HTTPServiceUnavailable(text="The simulation and robots are still starting up.")
         request_id = f"hotel-{uuid4().hex}"
         response = asyncio.get_running_loop().create_future()
         self.responses[request_id] = response
         now = self.last_sim["step"] * 1000 // PHYSICS_HZ
         request = task_request(preset, now, self.rooms.get(room))
+        labels = [f"hotel_task={preset}", f"hotel_source={source}"]
+        if room:
+            labels.append(f"hotel_room={room}")
+        request["request"]["labels"] = labels
         self.request_pub.publish(ApiRequest(request_id=request_id, json_msg=json.dumps(request)))
         try:
             result = await asyncio.wait_for(response, timeout=8)
@@ -346,7 +412,7 @@ class HotelBridge(Node):
             errors = result.get("errors", [])
             detail = errors[0].get("detail", "The task could not be scheduled.") if errors else "The task could not be scheduled."
             raise web.HTTPConflict(text=detail)
-        return self.update_task(result["state"], preset, room)
+        return self.update_task(result["state"], preset, room, source, now)
 
 
 def dashboard(bridge):
@@ -397,6 +463,19 @@ def dashboard(bridge):
         bridge.operate(await json_form(request))
         return web.json_response({"accepted": True}, status=202)
 
+    async def task_simulation(request):
+        form = await json_form(request)
+        enabled = form.get("enabled")
+        if not isinstance(enabled, bool):
+            raise web.HTTPBadRequest(text="Choose whether to simulate tasks.")
+        if enabled and not bridge.ready():
+            raise web.HTTPServiceUnavailable(text="Wait for the simulation before starting automatic tasks.")
+        return web.json_response(bridge.task_simulation.set_enabled(enabled))
+
+    async def reset(request):
+        await json_form(request)
+        return web.json_response(bridge.reset(), status=202)
+
     async def events(request):
         if request.remote != "127.0.0.1":
             raise web.HTTPForbidden()
@@ -422,6 +501,8 @@ def dashboard(bridge):
     app.router.add_get("/api/state", state)
     app.router.add_get("/api/presets", presets)
     app.router.add_post("/api/tasks", submit)
+    app.router.add_post("/api/task-simulation", task_simulation)
+    app.router.add_post("/api/reset", reset)
     app.router.add_post("/api/infrastructure", infrastructure)
     app.router.add_get("/rmf/events", events)
     app.router.add_static("/static", ROOT / "web")
@@ -432,18 +513,24 @@ async def run():
     bridge = HotelBridge()
     executor = SingleThreadedExecutor()
     executor.add_node(bridge)
-    runner = web.AppRunner(dashboard(bridge))
+    runner = web.AppRunner(dashboard(bridge), shutdown_timeout=3)
+    task_simulation = asyncio.create_task(bridge.task_simulation.run())
     try:
         await runner.setup()
-        await web.TCPSite(runner, "0.0.0.0", 8787).start()
-        bridge.get_logger().info("Hotel dashboard is listening on port 8787")
+        port = int(os.environ.get("HOTEL_DASHBOARD_PORT", "8787"))
+        await web.TCPSite(runner, os.environ.get("HOTEL_DASHBOARD_HOST", "0.0.0.0"), port).start()
+        bridge.get_logger().info(f"Hotel dashboard is listening on port {port}")
         while rclpy.ok():
             executor.spin_once(timeout_sec=0.0)
             await asyncio.sleep(0.003)
     finally:
+        task_simulation.cancel()
+        with suppress(asyncio.CancelledError):
+            await task_simulation
         await runner.cleanup()
         executor.shutdown()
         bridge.link.close()
+        bridge.history.close()
         bridge.destroy_node()
 
 

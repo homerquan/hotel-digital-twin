@@ -254,6 +254,46 @@ def furnishings(stage, path, items, z, templates):
         prim.SetCustomDataByKey("furnishing", kind)
 
 
+def reception_sign(stage, path, z):
+    width, height = 1.74, 0.48
+    root = UsdGeom.Xform.Define(stage, path)
+    pose(root.GetPrim(), (19.797, -26.241, z + 1.79), 1.06)
+    box(stage, f"{path}/BrassEdge", (0, 0, 0), (width, 0.037, height),
+        (0.34, 0.21, 0.098), collision=False)
+
+    face = UsdGeom.Mesh.Define(stage, f"{path}/EngravedFace")
+    prim = face.GetPrim()
+    prim.SetCustomDataByKey("texturedDecoration", True)
+    x, h, y = width / 2 - .005, height / 2 - .005, -.019
+    face.CreatePointsAttr([(-x, y, -h), (x, y, -h), (x, y, h), (-x, y, h)])
+    face.CreateFaceVertexCountsAttr([4])
+    face.CreateFaceVertexIndicesAttr([0, 1, 2, 3])
+    face.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+    uv = UsdGeom.PrimvarsAPI(prim).CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.vertex)
+    uv.Set([(0, 0), (1, 0), (1, 1), (0, 1)])
+
+    material = UsdShade.Material.Define(stage, f"{path}/BrushedBrass")
+    surface = UsdShade.Shader.Define(stage, f"{path}/BrushedBrass/Surface")
+    surface.CreateIdAttr("UsdPreviewSurface")
+    surface.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(.28)
+    surface.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(.51)
+    material.CreateSurfaceOutput().ConnectToSource(surface.CreateOutput("surface", Sdf.ValueTypeNames.Token))
+    reader = UsdShade.Shader.Define(stage, f"{path}/BrushedBrass/UV")
+    reader.CreateIdAttr("UsdPrimvarReader_float2")
+    reader.CreateInput("varname", Sdf.ValueTypeNames.String).Set("st")
+    texture = UsdShade.Shader.Define(stage, f"{path}/BrushedBrass/Engraving")
+    texture.CreateIdAttr("UsdUVTexture")
+    texture.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+        reader.CreateOutput("result", Sdf.ValueTypeNames.Float2))
+    texture.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(Sdf.AssetPath("./reception_sign.jpg"))
+    texture.CreateInput("sourceColorSpace", Sdf.ValueTypeNames.Token).Set("sRGB")
+    for axis in ("wrapS", "wrapT"):
+        texture.CreateInput(axis, Sdf.ValueTypeNames.Token).Set("clamp")
+    surface.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+        texture.CreateOutput("rgb", Sdf.ValueTypeNames.Float3))
+    UsdShade.MaterialBindingAPI.Apply(prim).Bind(material)
+
+
 def robot(stage, spec, z):
     path = f"/World/Robots/{spec['name']}"
     mover(stage, path, (spec["x"], spec["y"], z), math.degrees(spec["yaw"]))
@@ -311,6 +351,8 @@ def build(stage):
             box(stage, f"{path}/Furniture/Prop{index}", (x, y, z + prop["size"][2] / 2), prop["size"],
                 (0.40, 0.46, 0.42), math.degrees(prop["yaw"]), collision=False)
         furnishings(stage, f"{path}/Furnishings", data.get("furnishings", []), z, templates)
+        if level == "L1":
+            reception_sign(stage, f"{path}/ReceptionSign", z)
         for entry in data["doors"]:
             door(stage, f"/World/Doors/{entry['name']}", entry, z)
     for entry in layout["lifts"]:

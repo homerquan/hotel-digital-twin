@@ -4,21 +4,23 @@ services:
   rmf:
     image: building-twin-hotel-rmf:jazzy
     build: .
-    command: [ros2, launch, /workspace/launch/hotel.launch.py]
+    command: [python3, /workspace/hotel_demo/lifecycle.py, ros2, launch, /workspace/launch/hotel.launch.py]
     init: true
     working_dir: /tmp
     environment:
       PYTHONUNBUFFERED: "1"
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-62}
+      HOTEL_STATE_DIR: /hotel-state
     ports:
       - "127.0.0.1:${HOTEL_PORT:-8787}:8787"
     volumes:
       - .:/workspace:ro
+      - hotel-state:/hotel-state
 
   isaac:
     image: ${ISAAC_SIM_IMAGE:-nvcr.io/nvidia/isaac-sim:6.2.0}
-    entrypoint: [/isaac-sim/python.sh, --no-ros-env, /workspace/run_sim.py]
+    entrypoint: [/isaac-sim/python.sh, --no-ros-env, /workspace/hotel_demo/lifecycle.py, --python, /workspace/run_sim.py]
     network_mode: service:rmf
     gpus: all
     init: true
@@ -29,7 +31,12 @@ services:
       PRIVACY_CONSENT: "N"
       PYTHONUNBUFFERED: "1"
       HOTEL_SIM_RATE: ${HOTEL_SIM_RATE:-1}
+      HOTEL_STATE_DIR: /hotel-state
     volumes:
       - .:/workspace:ro
+      - hotel-state:/hotel-state:ro
     tmpfs:
       - /isaac-sim/.cache:uid=1234,gid=1234,mode=0755
+
+volumes:
+  hotel-state:

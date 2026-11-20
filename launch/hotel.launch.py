@@ -1,5 +1,6 @@
 """Launch the hotel-only Open-RMF graph and Isaac Sim bridge."""
 
+import os
 from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
@@ -10,7 +11,7 @@ from launch_ros.actions import Node
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EVENTS = "ws://127.0.0.1:8787/rmf/events"
+EVENTS = f"ws://127.0.0.1:{os.environ.get('HOTEL_DASHBOARD_PORT', '8787')}/rmf/events"
 FLEETS = ("tinyRobot", "cleanerBotA", "deliveryRobot")
 
 

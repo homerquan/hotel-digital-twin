@@ -1,4 +1,5 @@
 import { HotelMap } from "./map.js";
+import { durationText, rateText, trend } from "./performance.js";
 
 const $ = (id) => document.getElementById(id);
 const terminal = new Set(["completed", "finished", "failed", "canceled", "killed", "skipped"]);
@@ -6,6 +7,7 @@ const labels = { idle: "Idle", moving: "Moving", charging: "Charging", waiting: 
   underway: "In progress", queued: "Queued", completed: "Completed", finished: "Ended", failed: "Failed" };
 let layout, map, presets, selected, latest, camera, loadingCamera;
 let show3D = false;
+let changingSimulation = false, resetRequested = null, sendingReset = false, performanceKey;
 const robotRows = new Map();
 
 function element(tag, className, text) {
@@ -41,6 +43,12 @@ async function getJson(url, options = {}) {
   return response.json();
 }
 
+function sendJson(url, data) {
+  return getJson(url, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+  });
+}
+
 function selectFloor(level) {
   map.setFloor(level);
   $("floor-name").textContent = layout.levels[level].name;
@@ -57,7 +65,7 @@ function cameraStatus(message, live = false) {
 
 function syncCamera() {
   if (!show3D || !camera || !latest) return;
-  camera.sync(latest.actors || {});
+  camera.sync(latest.actors || {}, latest.people || [], latest.sim_time);
   const live = latest.live && Object.keys(latest.actors || {}).length > 0;
   cameraStatus(live ? "Live" : "Waiting for simulation", live);
 }
@@ -164,18 +172,73 @@ function initialize(geometry, options) {
   }
 }
 
+function renderPerformance(performance) {
+  const key = JSON.stringify(performance);
+  if (key === performanceKey) return;
+  performanceKey = key;
+  const rows = presets.map(({ id, name }) => {
+    const stats = performance[id];
+    const row = element("tr");
+    const rate = element("td");
+    const average = element("td");
+    const success = element("div", "performance-value");
+    success.append(element("strong", "", stats ? rateText(stats.rate) : "—"));
+    if (stats) success.append(element("small", "", `${stats.completed}/${stats.total} completed`));
+    const duration = element("div", "performance-value");
+    duration.append(element("strong", "", stats?.average == null ? "—" : durationText(stats.average)));
+    rate.append(success);
+    average.append(duration);
+    if (stats) {
+      const rateTrend = trend(stats.recent, "rate", rateText, "Recent success rate");
+      const timeTrend = trend(stats.recent, "average", durationText, "Recent average time");
+      if (rateTrend) rate.append(rateTrend);
+      if (timeTrend) average.append(timeTrend);
+    }
+    const type = element("th", "", name);
+    type.scope = "row";
+    row.append(type, rate, average);
+    return row;
+  });
+  $("performance").replaceChildren(...rows);
+  $("no-performance").hidden = Object.keys(performance).length > 0;
+}
+
+function renderControls(state) {
+  const auto = state.task_simulation || {};
+  const resetting = Boolean(resetRequested || state.resetting);
+  $("new-task").disabled = !state.ready || resetting;
+  $("reset-simulation").disabled = !state.can_reset || sendingReset || resetting;
+  const button = $("simulate-tasks");
+  button.disabled = changingSimulation || resetting || (!state.ready && !auto.enabled);
+  button.classList.toggle("is-active", Boolean(auto.enabled));
+  button.textContent = auto.enabled ? "Stop simulating" : "Simulate tasks";
+  const feedback = $("automation-status");
+  feedback.hidden = !auto.enabled || resetting;
+  if (!feedback.hidden) {
+    const due = Math.ceil(auto.next_time - state.sim_time);
+    feedback.textContent = !state.ready ? "Waiting for the simulation" :
+      auto.waiting ? "Waiting for an available robot" : due > 0 ? `Next automatic task in ${durationText(due)}` : "Dispatching automatic task…";
+  }
+}
+
 function render(state) {
+  if (resetRequested && state.run === resetRequested && state.ready) resetRequested = null;
+  if (resetRequested && state.run !== resetRequested) {
+    state = { ...state, live: false, ready: false, sim_time: 0, tasks: [], people: [], task_simulation: {},
+      robots: state.robots.map((robot) => ({ ...robot, online: false })) };
+  }
   latest = state;
   const online = state.robots.filter((robot) => robot.online).length;
   $("online-count").replaceChildren(String(online), element("small", "", ` / ${state.robots.length}`));
   $("task-count").textContent = state.tasks.filter((task) => !terminal.has(task.status)).length;
-  $("sim-time").textContent = state.sim_time ? timeText(state.sim_time) : "—";
+  $("sim-time").textContent = timeText(state.sim_time);
   $("connection").classList.toggle("is-live", state.ready);
   $("connection").classList.toggle("is-offline", !state.live);
-  const connection = state.ready ? "Simulation live" : state.restarted ? "Restart required" :
+  const connection = resetRequested || state.resetting ? "Resetting simulation" :
+    state.ready ? "Simulation live" : state.restarted ? "Restart required" :
     state.live ? "Connecting to robots" : "Waiting for simulation";
   if ($("connection-text").textContent !== connection) $("connection-text").textContent = connection;
-  $("new-task").disabled = !state.ready;
+  renderControls(state);
   $("building-controls").disabled = !state.live;
   $("view-toggle").disabled = !layout;
   map.state = state;
@@ -197,6 +260,7 @@ function render(state) {
     return item;
   }));
 
+  renderPerformance(state.performance || {});
   $("no-tasks").hidden = state.tasks.length > 0;
   $("task-table").hidden = !state.tasks.length;
   $("tasks").replaceChildren(...state.tasks.map((task) => {
@@ -204,7 +268,8 @@ function render(state) {
     row.title = task.id;
     const name = element("td"), status = element("td");
     name.append(element("strong", "", task.name));
-    if (task.route) name.append(element("span", "", task.route));
+    const detail = [task.route, task.source === "automatic" ? "Automatic" : null].filter(Boolean).join(" · ");
+    if (detail) name.append(element("span", "", detail));
     status.append(pill(task.status));
     row.append(name, status, element("td", "", task.robot || "—"), element("td", "", timeText(task.time)));
     return row;
@@ -244,6 +309,50 @@ $("task-form").addEventListener("submit", async (event) => {
   } finally {
     submitTask.disabled = false;
     submitTask.textContent = "Dispatch task";
+  }
+});
+
+$("simulate-tasks").addEventListener("click", async () => {
+  const feedback = $("automation-error");
+  feedback.hidden = true;
+  changingSimulation = true;
+  renderControls(latest);
+  try {
+    const taskSimulation = await sendJson("/api/task-simulation", { enabled: !latest.task_simulation?.enabled });
+    render({ ...latest, task_simulation: taskSimulation });
+  } catch (error) {
+    feedback.textContent = error.message;
+    feedback.hidden = false;
+  } finally {
+    changingSimulation = false;
+    renderControls(latest);
+  }
+});
+
+const resetDialog = $("reset-dialog");
+$("reset-simulation").addEventListener("click", () => {
+  $("reset-error").hidden = true;
+  resetDialog.showModal();
+});
+for (const id of ["close-reset", "cancel-reset"]) $(id).addEventListener("click", () => resetDialog.close());
+$("reset-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = $("confirm-reset");
+  const feedback = $("reset-error");
+  sendingReset = button.disabled = true;
+  feedback.hidden = true;
+  try {
+    const reset = await sendJson("/api/reset", {});
+    resetRequested = reset.run;
+    $("automation-error").hidden = true;
+    resetDialog.close();
+    render(latest);
+  } catch (error) {
+    feedback.textContent = error.message;
+    feedback.hidden = false;
+  } finally {
+    sendingReset = button.disabled = false;
+    renderControls(latest);
   }
 });
 
@@ -321,7 +430,7 @@ async function poll() {
   } catch (error) {
     if (latest) render({ ...latest, live: false, ready: false, robots: latest.robots.map((robot) => ({ ...robot, online: false })) });
     $("connection").classList.add("is-offline");
-    $("connection-text").textContent = "Dashboard disconnected";
+    $("connection-text").textContent = resetRequested ? "Resetting simulation" : "Dashboard disconnected";
     $("new-task").disabled = true;
   } finally {
     setTimeout(poll, show3D ? 120 : 300);

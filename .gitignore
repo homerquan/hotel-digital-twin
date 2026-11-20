@@ -1,6 +1,7 @@
 # Downloaded USD packages and textures
 /assets/robots/
 /assets/furniture/
+/assets/people/
 
 # Python environments, bytecode, and tool caches
 /.venv/
@@ -30,10 +31,12 @@ __pycache__/
 /install/
 /log/
 /.cache/
+/.hotel-state/
 *.log
 
 # Temporary scene exports and Spark deployment staging
 /web/.hotel-materials.glb
+/web/people/
 /.furnished-update/
 /.l1-update/
 /.suites-update/

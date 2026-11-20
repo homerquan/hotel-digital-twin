@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "./vendor/controls/OrbitControls.js";
 import { GLTFLoader } from "./vendor/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "./vendor/environments/RoomEnvironment.js";
+import { PeopleView } from "./people.js";
 
 export class CameraView {
   constructor(container) {
@@ -10,6 +11,8 @@ export class CameraView {
     this.container = container;
     this.nodes = new Map();
     this.scene = new THREE.Scene();
+    this.loader = new GLTFLoader();
+    this.people = new PeopleView(this.scene, this.loader, () => this.draw());
     this.scene.background = new THREE.Color(0xe9eaf6);
     this.camera = new THREE.PerspectiveCamera(40, 1, .08, 360);
     this.camera.up.set(0, 0, 1);
@@ -39,7 +42,7 @@ export class CameraView {
   }
 
   async load() {
-    const { scene } = await new GLTFLoader().loadAsync("/static/hotel.glb");
+    const { scene } = await this.loader.loadAsync("/static/hotel.glb");
     this.scene.add(scene);
     scene.traverse((node) => {
       if (node.isMesh && node.geometry.hasAttribute("color")) {
@@ -121,7 +124,7 @@ export class CameraView {
     this.draw();
   }
 
-  sync(actors) {
+  sync(actors, people, time) {
     for (const [path, node] of this.nodes) {
       const [, , group, name] = path.split("/");
       if (actors[path]) {
@@ -135,14 +138,18 @@ export class CameraView {
         default: node.visible = Math.abs(node.matrix.elements[14] - this.elevation) < 2.2;
       }
     }
+    this.people.sync(people, this.level, time);
     this.draw();
   }
 
   draw() {
     if (!this.active || this.frameRequest) return;
-    this.frameRequest = requestAnimationFrame(() => {
+    this.frameRequest = requestAnimationFrame((now) => {
       this.frameRequest = null;
-      if (this.active) this.renderer.render(this.scene, this.camera);
+      if (!this.active) return;
+      const moving = this.people.step(now);
+      this.renderer.render(this.scene, this.camera);
+      if (moving) this.draw();
     });
   }
 }

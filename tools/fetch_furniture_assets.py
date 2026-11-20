@@ -60,8 +60,8 @@ def valid(path, size, checksum):
     return True
 
 
-def download(url, relative, size, checksum=None):
-    path = DESTINATION / relative
+def download(url, relative, size, checksum=None, *, destination=DESTINATION):
+    path = destination / relative
     if valid(path, size, checksum):
         return
     path.parent.mkdir(parents=True, exist_ok=True)

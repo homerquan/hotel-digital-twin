@@ -203,13 +203,13 @@ def corner_values(values, interpolation, shape, point_ids):
     return values
 
 
-def texture_coordinates(prim, shape, texture, grid, point_ids):
+def texture_coordinates(prim, shape, texture, grid, point_ids, uv_name="st"):
     reader = connected_shader(texture.GetInput("st")) if texture else None
     transform = None
     if reader and reader.GetIdAttr().Get() == "UsdTransform2d":
         transform = reader
         reader = connected_shader(transform.GetInput("in"))
-    name = surface_value(reader, "varname", "st")
+    name = surface_value(reader, "varname", uv_name)
     uv = UsdGeom.PrimvarsAPI(prim).FindPrimvarWithInheritance(name)
     if not uv or not uv.HasValue():
         return None
@@ -243,7 +243,7 @@ def material_triangles(shape, corners):
         yield default, corners[unassigned]
 
 
-def model_meshes(prim, material_for):
+def model_meshes(prim, material_for, *, uv_name="st", point_attributes=None):
     shape = UsdGeom.Mesh(prim)
     points = shape.GetPointsAttr().Get()
     indices = shape.GetFaceVertexIndicesAttr().Get()
@@ -264,12 +264,15 @@ def model_meshes(prim, material_for):
         key, (texture, grid) = material_for(material)
         selected = triangles.reshape(-1)
         fields = [point_ids[selected, None], corner_normals[selected]]
-        uv = texture_coordinates(prim, shape, texture, grid, point_ids) if texture else None
+        uv = texture_coordinates(prim, shape, texture, grid, point_ids, uv_name) if texture else None
         if uv is not None:
             fields.append(uv[selected])
         keys, face_ids = np.unique(np.column_stack(fields), axis=0, return_inverse=True)
-        mesh = trimesh.Trimesh(vertices=points[keys[:, 0].astype(int)], faces=face_ids.reshape(-1, 3),
+        source_points = keys[:, 0].astype(int)
+        mesh = trimesh.Trimesh(vertices=points[source_points], faces=face_ids.reshape(-1, 3),
                                vertex_normals=keys[:, 1:4], process=False)
+        if point_attributes:
+            mesh.vertex_attributes.update({name: values[source_points] for name, values in point_attributes.items()})
         yield key, mesh, keys[:, 4:] if uv is not None else None
 
 
@@ -317,8 +320,9 @@ def main():
     frame = UsdGeom.XformCache()
     movers = {prim.GetPath() for prim in stage.Traverse() if prim.HasAPI(UsdPhysics.RigidBodyAPI)}
     furnishings = [prim for prim in stage.Traverse() if prim.GetCustomDataByKey("furnishing")]
-    textured_floors = [prim for prim in stage.Traverse() if prim.GetCustomDataByKey("texturedFloor")]
-    scenery_models = furnishings + textured_floors
+    textured_surfaces = [prim for prim in stage.Traverse()
+                         if prim.GetCustomDataByKey("texturedFloor") or prim.GetCustomDataByKey("texturedDecoration")]
+    scenery_models = furnishings + textured_surfaces
     layout = json.loads((ROOT / "assets/hotel.json").read_text())
     robot_visuals = {}
     for spec in layout["robots"]:

@@ -1,0 +1,23 @@
+services:
+  rmf:
+    network_mode: host
+    ports: !reset []
+    environment:
+      ROS_DOMAIN_ID: ${HOTEL_VIEWER_ROS_DOMAIN_ID:-63}
+      HOTEL_DASHBOARD_HOST: 127.0.0.1
+      HOTEL_DASHBOARD_PORT: ${HOTEL_VIEWER_PORT:-8788}
+      HOTEL_SIM_UDP_PORT: 18761
+      HOTEL_AUTOPLAY: "1"
+
+  isaac:
+    network_mode: host
+    entrypoint:
+      - /isaac-sim/python.sh
+      - --no-ros-env
+      - /workspace/hotel_demo/lifecycle.py
+      - --python
+      - /workspace/run_sim.py
+      - --stream
+      - ${HOTEL_STREAM_IP:?Set a local IPv4 address for the Isaac Sim stream}
+    environment:
+      HOTEL_SIM_UDP_PORT: 18761

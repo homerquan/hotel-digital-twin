@@ -20,13 +20,15 @@
   <main class="page">
     <div class="heading">
       <h1>Fleet overview</h1>
-      <button class="primary" id="new-task" type="button" disabled><span aria-hidden="true">＋</span> New task</button>
-    </div>
-
-    <div class="metrics" aria-label="Fleet statistics">
-      <div class="metric"><div class="metric-icon metric-robots" aria-hidden="true">◈</div><div><span>Robots online</span><strong id="online-count">—</strong></div></div>
-      <div class="metric"><div class="metric-icon metric-tasks" aria-hidden="true">≡</div><div><span>Active tasks</span><strong id="task-count">—</strong></div></div>
-      <div class="metric"><div class="metric-icon metric-time" aria-hidden="true">◷</div><div><span>Simulation time</span><strong id="sim-time">—</strong></div></div>
+      <div class="heading-tools">
+        <div class="heading-actions">
+          <button class="secondary" id="reset-simulation" type="button" disabled>Reset</button>
+          <button class="secondary" id="simulate-tasks" type="button" disabled>Simulate tasks</button>
+          <button class="primary" id="new-task" type="button" disabled><span aria-hidden="true">＋</span> New task</button>
+        </div>
+        <p class="automation-feedback" id="automation-status" hidden></p>
+        <p class="automation-feedback form-error" id="automation-error" role="alert" hidden></p>
+      </div>
     </div>
 
     <div class="workspace">
@@ -75,6 +77,26 @@
       </aside>
     </div>
 
+    <div class="metrics" aria-label="Fleet statistics">
+      <div class="metric"><div class="metric-icon metric-robots" aria-hidden="true">◈</div><div><span>Robots online</span><strong id="online-count">—</strong></div></div>
+      <div class="metric"><div class="metric-icon metric-tasks" aria-hidden="true">≡</div><div><span>Active tasks</span><strong id="task-count">—</strong></div></div>
+      <div class="metric"><div class="metric-icon metric-time" aria-hidden="true">◷</div><div><span>Simulation time</span><strong id="sim-time">00:00:00</strong></div></div>
+    </div>
+
+    <section class="panel performance" aria-labelledby="performance-heading">
+      <div class="panel-heading">
+        <div>
+          <h2 id="performance-heading">Task performance</h2>
+          <p>Average time includes waiting. Trends show the latest 15 results.</p>
+        </div>
+      </div>
+      <table class="performance-table">
+        <thead><tr><th scope="col">Task type</th><th scope="col">Success rate</th><th scope="col">Average time</th></tr></thead>
+        <tbody id="performance"></tbody>
+      </table>
+      <p class="empty" id="no-performance">Results will appear here as tasks finish.</p>
+    </section>
+
     <section class="panel tasks" aria-labelledby="tasks-heading">
       <div class="panel-heading"><h2 id="tasks-heading">Task activity</h2></div>
       <div class="task-table" id="task-table" hidden>
@@ -101,6 +123,17 @@
       <p class="task-detail" id="preset-detail"></p>
       <p class="form-error" id="task-error" role="alert" hidden></p>
       <div class="dialog-actions"><button id="cancel-task" type="button" class="secondary">Cancel</button><button class="primary" id="submit-task" type="submit">Dispatch task</button></div>
+    </form>
+  </dialog>
+  <dialog id="reset-dialog" aria-labelledby="reset-heading">
+    <form id="reset-form">
+      <div class="dialog-heading"><h2 id="reset-heading">Reset simulation?</h2><button id="close-reset" class="plain" type="button" aria-label="Close">×</button></div>
+      <p class="reset-detail">The hotel and robots will return to their starting positions at 00:00:00. Active tasks will stop. Completed task history is saved.</p>
+      <p class="form-error" id="reset-error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button id="cancel-reset" class="secondary" type="button" autofocus>Cancel</button>
+        <button id="confirm-reset" class="primary danger" type="submit">Reset simulation</button>
+      </div>
     </form>
   </dialog>
   <dialog id="building-dialog" aria-labelledby="building-heading">

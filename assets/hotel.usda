@@ -1658,6 +1658,72 @@ def Xform "World"
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
                 }
             }
+
+            def Xform "ReceptionSign"
+            {
+                float xformOp:rotateZ = 1.06
+                double3 xformOp:translate = (19.797, -26.241, 1.79)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+                def Cube "BrassEdge"
+                {
+                    color3f[] primvars:displayColor = [(0.34, 0.21, 0.098)]
+                    double size = 1
+                    float xformOp:rotateZ = 0
+                    float3 xformOp:scale = (1.74, 0.037, 0.48)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+                }
+
+                def Mesh "EngravedFace" (
+                    prepend apiSchemas = ["MaterialBindingAPI"]
+                    customData = {
+                        bool texturedDecoration = 1
+                    }
+                )
+                {
+                    int[] faceVertexCounts = [4]
+                    int[] faceVertexIndices = [0, 1, 2, 3]
+                    rel material:binding = </World/Hotel/L1/ReceptionSign/BrushedBrass>
+                    point3f[] points = [(-0.865, -0.019, -0.235), (0.865, -0.019, -0.235), (0.865, -0.019, 0.235), (-0.865, -0.019, 0.235)]
+                    texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                        interpolation = "vertex"
+                    )
+                    uniform token subdivisionScheme = "none"
+                }
+
+                def Material "BrushedBrass"
+                {
+                    token outputs:surface.connect = </World/Hotel/L1/ReceptionSign/BrushedBrass/Surface.outputs:surface>
+
+                    def Shader "Surface"
+                    {
+                        uniform token info:id = "UsdPreviewSurface"
+                        color3f inputs:diffuseColor.connect = </World/Hotel/L1/ReceptionSign/BrushedBrass/Engraving.outputs:rgb>
+                        float inputs:metallic = 0.28
+                        float inputs:roughness = 0.51
+                        token outputs:surface
+                    }
+
+                    def Shader "UV"
+                    {
+                        uniform token info:id = "UsdPrimvarReader_float2"
+                        string inputs:varname = "st"
+                        float2 outputs:result
+                    }
+
+                    def Shader "Engraving"
+                    {
+                        uniform token info:id = "UsdUVTexture"
+                        asset inputs:file = @./reception_sign.jpg@
+                        token inputs:sourceColorSpace = "sRGB"
+                        float2 inputs:st.connect = </World/Hotel/L1/ReceptionSign/BrushedBrass/UV.outputs:result>
+                        token inputs:wrapS = "clamp"
+                        token inputs:wrapT = "clamp"
+                        float3 outputs:rgb
+                    }
+                }
+            }
         }
 
         def Scope "L2"

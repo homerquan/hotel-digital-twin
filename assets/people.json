@@ -1,0 +1,13 @@
+{
+  "models": {
+    "guest": "Characters/F_Business_02/F_Business_02.usd",
+    "maintenance": "Characters/male_adult_construction_01_new/male_adult_construction_01_new.usd"
+  },
+  "people": [
+    {"name": "LobbyHost", "model": "guest", "level": "L1", "stops": [[18.25, -37.55]], "facing": [0, -1, 0]},
+    {"name": "Maintenance", "model": "maintenance", "level": "L1", "stops": [[17, -36.4], [20.2, -36.4], [21, -38.1], [18, -38.85], [16, -38.18]], "speed": 1.1, "pause": 1.5},
+    {"name": "RestaurantGuest", "model": "guest", "level": "L1", "stops": [[8.3, -7.8], [11.6, -7.8]], "speed": 0.85, "pause": 3},
+    {"name": "RoomGuest", "model": "guest", "level": "L2", "stops": [[25, -26.8], [23, -27.8], [23, -29.6], [24.4, -28.5]], "speed": 0.9, "pause": 2.5},
+    {"name": "SuiteGuest", "model": "guest", "level": "L3", "stops": [[11.55, -17.6], [11.55, -20.9], [10.25, -20.9]], "speed": 0.9, "pause": 2}
+  ]
+}
