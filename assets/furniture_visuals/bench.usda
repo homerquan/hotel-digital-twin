@@ -1,0 +1,171 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, -3.0733645073333093e-9, 1.1920928966180355e-8)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/bench/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "bench" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "seat_panel"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "front_apron"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "back_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "top_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "end_apron_left"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "front_leg_left"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "rear_post_left"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "end_apron_right"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "front_leg_right"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "rear_post_right"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "back_slat_1"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "back_slat_2"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "back_slat_3"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "back_slat_4"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "back_slat_5"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

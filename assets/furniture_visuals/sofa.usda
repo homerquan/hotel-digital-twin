@@ -1,0 +1,305 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, 0.00848400592803955, -0.000003999999989900971)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/sofa/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "frame" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsArticulationRootAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "left_side_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "right_side_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "front_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "mid_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "rear_rail"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "left_front_upright"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "left_rear_upright"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "left_arm"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "right_front_upright"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "right_rear_upright"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "right_arm"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_front_left"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_rear_left"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_front_right"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_rear_right"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "seat_left" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "panel"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "back_left" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "panel"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "seat_right" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "panel"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "back_right" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "panel"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "Joints"
+            {
+                over "seat_left_mount" (
+                    active = false
+                )
+                {
+                }
+
+                over "back_left_mount" (
+                    active = false
+                )
+                {
+                }
+
+                over "seat_right_mount" (
+                    active = false
+                )
+                {
+                }
+
+                over "back_right_mount" (
+                    active = false
+                )
+                {
+                }
+            }
+        }
+    }
+}
+

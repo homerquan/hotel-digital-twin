@@ -1,0 +1,237 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, -0, -0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/dining_table/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "table" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "top_plank_1"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "top_plank_2"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "top_plank_3"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "top_plank_4"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "top_plank_5"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "breadboard_left"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "breadboard_right"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_front_left"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh_component_000" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_001" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_front_right"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh_component_000" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_001" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_back_left"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh_component_000" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_001" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "leg_back_right"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh_component_000" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_001" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "apron_front"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "apron_back"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "apron_left"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "apron_right"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

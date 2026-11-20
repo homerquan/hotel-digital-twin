@@ -1,0 +1,290 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, 0.000004991888999938965, 2.1606683716507424e-10)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/bistro_table/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "foot" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsArticulationRootAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "cast_foot"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh_component_000" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_001" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_002" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_003" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "mesh_component_004" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "pad_0"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "pad_1"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "pad_2"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "pad_3"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+
+                over "column" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "column_shaft"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "top_plate" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "mounting_plate"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "top" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "slab"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "saucer_a" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "saucer_dish"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "cup_a" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "cup_shell"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "handle"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "saucer_b" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "saucer_dish"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "cup_b" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "cup_shell"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "handle"
+                        {
+                            over "Geom"
+                            {
+                                over "mesh" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "Joints"
+            {
+                over "foot_to_column" (
+                    active = false
+                )
+                {
+                }
+
+                over "column_to_top_plate" (
+                    active = false
+                )
+                {
+                }
+
+                over "top_plate_to_top" (
+                    active = false
+                )
+                {
+                }
+            }
+        }
+    }
+}
+

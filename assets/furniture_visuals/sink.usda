@@ -1,0 +1,26 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, 0.011499998614192014, -0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/sink/vanity_sink_faucet.usda@
+            variants = {
+                string physics = "none"
+            }
+        )
+        {
+        }
+    }
+}
+

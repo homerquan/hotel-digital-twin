@@ -1,0 +1,96 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (2.9802322831784522e-9, 0.4499999970197678, 7.450580569168253e-10)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/reception/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "reception_counter" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "walnut_front"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "quartz_top"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "counter_plinth"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "steel_toe_kick"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "desk_body"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "desk_top"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "desk_plinth"
+                        {
+                            over "Geom" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

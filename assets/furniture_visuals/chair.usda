@@ -1,0 +1,152 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, -0.0000015050172805786133, -0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/chair/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "shell" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsArticulationRootAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "shell"
+                        {
+                            over "Geom"
+                            {
+                                over "moulded_shell_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "front_left_leg" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "leg"
+                        {
+                            over "Geom"
+                            {
+                                over "front_left_leg_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "front_right_leg" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "leg"
+                        {
+                            over "Geom"
+                            {
+                                over "front_right_leg_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "back_left_leg" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "leg"
+                        {
+                            over "Geom"
+                            {
+                                over "back_left_leg_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "back_right_leg" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "leg"
+                        {
+                            over "Geom"
+                            {
+                                over "back_right_leg_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "Joints"
+            {
+                over "shell_to_front_left_leg" (
+                    active = false
+                )
+                {
+                }
+
+                over "shell_to_front_right_leg" (
+                    active = false
+                )
+                {
+                }
+
+                over "shell_to_back_left_leg" (
+                    active = false
+                )
+                {
+                }
+
+                over "shell_to_back_right_leg" (
+                    active = false
+                )
+                {
+                }
+            }
+        }
+    }
+}
+

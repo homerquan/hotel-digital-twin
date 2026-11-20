@@ -1,0 +1,169 @@
+#usda 1.0
+(
+    defaultPrim = "Furniture"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Furniture"
+{
+    def Xform "Center"
+    {
+        float xformOp:rotateZ = 0
+        double3 xformOp:translate = (-0, 0.00044499337673187256, -0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ"]
+
+        def Xform "Model" (
+            prepend references = @../furniture/toilet/model.usdc@
+        )
+        {
+            over "Links"
+            {
+                over "body" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsArticulationRootAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "body_shell"
+                        {
+                            over "Geom"
+                            {
+                                over "toilet_body_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "hinge_pin"
+                        {
+                            over "Geom"
+                            {
+                                over "toilet_hinge_pin_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "button_bezel"
+                        {
+                            over "Geom"
+                            {
+                                over "toilet_button_bezel_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "lid" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "lid_shell"
+                        {
+                            over "Geom"
+                            {
+                                over "toilet_lid_plate_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "lid_barrel"
+                        {
+                            over "Geom"
+                            {
+                                over "toilet_lid_barrel_obj" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+
+                        over "lid_stops"
+                        {
+                            over "Geom"
+                            {
+                                over "toilet_lid_stops_obj_component_000" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+
+                                over "toilet_lid_stops_obj_component_001" (
+                                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                                )
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                over "button" (
+                    delete apiSchemas = ["PhysicsRigidBodyAPI"]
+                )
+                {
+                    over "Collisions"
+                    {
+                        over "button_cap"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "button_shaft"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+
+                        over "button_lip"
+                        {
+                            over "GeomHull" (
+                                delete apiSchemas = ["PhysicsCollisionAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "Joints"
+            {
+                over "lid_hinge" (
+                    active = false
+                )
+                {
+                }
+
+                over "flush_button_travel" (
+                    active = false
+                )
+                {
+                }
+            }
+        }
+    }
+}
+

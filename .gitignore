@@ -1,0 +1,47 @@
+# Downloaded USD packages and textures
+/assets/robots/
+/assets/furniture/
+
+# Python environments, bytecode, and tool caches
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+/htmlcov/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.*.example
+/.aws/
+/.ssh/
+
+# ROS, simulation, and packaging output
+/build/
+/dist/
+/install/
+/log/
+/.cache/
+*.log
+
+# Temporary scene exports and Spark deployment staging
+/web/.hotel-materials.glb
+/.furnished-update/
+/.l1-update/
+/.suites-update/
+/.suite-finishes/
+
+# Editor and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

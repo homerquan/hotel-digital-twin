@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5fa">
+  <title>Hotel Fleet</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="importmap">{"imports":{"three":"/static/vendor/three.module.min.js"}}</script>
+  <script type="module" src="/static/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">▥</span><strong>Hotel Fleet</strong></div>
+      <div class="connection" id="connection" role="status"><span class="dot"></span><span id="connection-text">Connecting</span></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="heading">
+      <h1>Fleet overview</h1>
+      <button class="primary" id="new-task" type="button" disabled><span aria-hidden="true">＋</span> New task</button>
+    </div>
+
+    <div class="metrics" aria-label="Fleet statistics">
+      <div class="metric"><div class="metric-icon metric-robots" aria-hidden="true">◈</div><div><span>Robots online</span><strong id="online-count">—</strong></div></div>
+      <div class="metric"><div class="metric-icon metric-tasks" aria-hidden="true">≡</div><div><span>Active tasks</span><strong id="task-count">—</strong></div></div>
+      <div class="metric"><div class="metric-icon metric-time" aria-hidden="true">◷</div><div><span>Simulation time</span><strong id="sim-time">—</strong></div></div>
+    </div>
+
+    <div class="workspace">
+      <section class="panel plan" aria-labelledby="plan-heading">
+        <div class="panel-heading">
+          <div><h2 id="plan-heading">Hotel floor plan</h2><p id="floor-name">Loading floors</p></div>
+          <div class="plan-actions">
+            <button class="view-toggle" id="view-toggle" type="button" aria-pressed="false" disabled>Live 3D</button>
+            <div id="floors" class="floor-picker" role="group" aria-label="Choose floor"></div>
+          </div>
+        </div>
+        <div class="map" id="map">
+          <canvas id="floor-map" role="img" aria-label="Floor plan and robot positions"></canvas>
+          <div class="orientation" id="map-orientation" aria-hidden="true"><span>↑</span>N</div>
+          <div class="scale" id="map-scale" aria-hidden="true"><span></span>5 m</div>
+          <div class="zoom" id="map-controls" role="group" aria-label="Map zoom">
+            <button id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+            <button id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button>
+            <button id="fit-map" type="button" aria-label="Fit to floor" title="Fit to floor">⌗</button>
+          </div>
+          <div class="camera" id="camera-pane" hidden>
+            <div class="scene-surface" id="scene-surface" role="img" aria-label="Live 3D view of the hotel"></div>
+            <span class="camera-status" id="camera-status" role="status">Loading 3D view</span>
+            <div class="zoom" role="group" aria-label="3D camera controls">
+              <button id="orbit-left" type="button" aria-label="Rotate camera left" title="Rotate left">↶</button>
+              <button id="orbit-right" type="button" aria-label="Rotate camera right" title="Rotate right">↷</button>
+              <button id="camera-in" type="button" aria-label="Zoom camera in" title="Zoom in">+</button>
+              <button id="camera-out" type="button" aria-label="Zoom camera out" title="Zoom out">−</button>
+              <button id="camera-fit" type="button" aria-label="Reset camera" title="Reset camera">⌗</button>
+            </div>
+          </div>
+        </div>
+        <div class="map-footer">
+          <div class="legend" aria-label="Robot fleet colors" id="legend"></div>
+          <label class="layer-toggle" id="map-layers"><input id="lane-toggle" type="checkbox" checked> Robot routes</label>
+        </div>
+      </section>
+
+      <aside class="panel fleet" aria-labelledby="fleet-heading">
+        <div class="panel-heading"><h2 id="fleet-heading">Robots</h2><span class="count" id="fleet-count">—</span></div>
+        <ul class="robot-list" id="robots"></ul>
+        <div class="lift-section">
+          <div class="lift-heading"><h3>Building</h3><button class="text-button" id="building-controls" type="button" disabled>Operate</button></div>
+          <ul id="lifts" class="lift-list"></ul>
+        </div>
+      </aside>
+    </div>
+
+    <section class="panel tasks" aria-labelledby="tasks-heading">
+      <div class="panel-heading"><h2 id="tasks-heading">Task activity</h2></div>
+      <div class="task-table" id="task-table" hidden>
+        <table>
+          <thead><tr><th scope="col">Task</th><th scope="col">Status</th><th scope="col">Assigned robot</th><th scope="col">Sim time</th></tr></thead>
+          <tbody id="tasks"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="no-tasks">No tasks yet. Dispatch a task to see its progress here.</p>
+    </section>
+  </main>
+
+  <dialog id="task-dialog" aria-labelledby="task-heading">
+    <form id="task-form">
+      <div class="dialog-heading"><h2 id="task-heading">Dispatch a hotel task</h2><button id="close-task" class="plain" type="button" aria-label="Close">×</button></div>
+      <label for="preset">Task</label>
+      <select id="preset" name="preset" required></select>
+      <div id="room-options" class="room-options" hidden>
+        <label for="room-number">Room number</label>
+        <select id="room-number" name="room" required disabled>
+          <option value="">Select a guest room</option>
+        </select>
+      </div>
+      <p class="task-detail" id="preset-detail"></p>
+      <p class="form-error" id="task-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button id="cancel-task" type="button" class="secondary">Cancel</button><button class="primary" id="submit-task" type="submit">Dispatch task</button></div>
+    </form>
+  </dialog>
+  <dialog id="building-dialog" aria-labelledby="building-heading">
+    <form id="building-form">
+      <div class="dialog-heading"><h2 id="building-heading">Building controls</h2><button id="close-building" class="plain" type="button" aria-label="Close">×</button></div>
+      <label for="equipment">Equipment</label>
+      <select id="equipment" required></select>
+      <div id="lift-options" hidden>
+        <label for="lift-floor">Destination</label>
+        <select id="lift-floor"></select>
+      </div>
+      <p class="task-detail" id="equipment-state"></p>
+      <p class="task-detail" id="equipment-feedback" role="status" hidden></p>
+      <div class="dialog-actions">
+        <button class="secondary" id="close-door" value="close" type="submit">Close door</button>
+        <button class="primary" id="open-door" value="open" type="submit">Open door</button>
+        <button class="primary" id="call-lift" value="call" type="submit" hidden>Call lift</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
